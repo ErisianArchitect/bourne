@@ -91,19 +91,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Checks the next byte in the stream against predicate and advances the stream if there is a match.
-    fn eat_next<F: Fn(&u8) -> bool>(&mut self, predicate: F) -> Option<bool> {
-        let res = predicate(&self.peek()?);
-        if res {
-            self.index += 1;
-        }
-        Some(res)
-    }
-
-    fn check_next<F: Fn(&u8) -> bool>(&self, predicate: F) -> Option<bool> {
-        Some(predicate(&self.peek()?))
-    }
-
     /// Retrieve the next byte paired with its index, advancing the parser in the process.
     fn indexed_next(&mut self) -> Option<(usize, u8)> {
         if self.index < self.source.len() {
@@ -147,7 +134,13 @@ impl<'a> Parser<'a> {
     }
 
     fn eat_whitespace(&mut self) {
-        while let Some(true) = self.eat_next(u8::is_ascii_whitespace) {}
+        while let Some(peek) = self.peek() {
+            if peek.is_ascii_whitespace() {
+                self.advance(1);
+            } else {
+                break;
+            }
+        }
     }
 
     fn parse_null(&mut self) -> ParseResult<Value> {
