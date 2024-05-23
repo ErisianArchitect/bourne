@@ -1,12 +1,6 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum BourneError {
-    #[error("Parse Error: {0}")]
-    ParseError(#[from] ParseError),
-}
-
-#[derive(Debug, Error)]
 pub enum ParseError {
     #[error("Attempted to step to an invalid fork. Fork must have been created from the parser that you wish to join to.")]
     StepToInvalidFork,
