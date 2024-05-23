@@ -1,8 +1,14 @@
 workspace = { members = ["bournemacro"] }
 [package]
 name = "bourne"
+description = "A simple JSON library."
+repository = "https://github.com/ErisianArchitect/bourne"
+readme = "README.md"
+categories = ["encoding", "parser-implementations"]
+keywords = ["json"]
 version = "0.1.0"
 edition = "2021"
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
