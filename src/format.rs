@@ -40,9 +40,13 @@ impl std::fmt::Display for Indent {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct JsonFormatter {
+    /// All on the same line.
     sameline: bool,
+    /// No spaces between elements or around colons.
     no_spacing: bool,
+    /// The [Indent] to use. This is ignored if `sameline` is true.
     indent: Indent,
+    /// Indent level. Only modify this if you know what you're doing.
     indent_level: u32,
 }
 
@@ -60,6 +64,7 @@ impl JsonFormatter {
         }
     }
 
+    /// Creates a copy of self where the indent level is incremented by 1.
     pub fn indent(&self) -> Self {
         Self {
             sameline: self.sameline,
@@ -69,6 +74,7 @@ impl JsonFormatter {
         }
     }
 
+    /// Writes the indentation to a writer.
     pub fn write_indent<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
         for _ in 0..self.indent_level {
             write!(writer, "{}", self.indent)?;
@@ -87,6 +93,7 @@ impl std::fmt::Display for JsonFormatter {
 }
 
 impl Default for Indent {
+    /// Indent::Spaces(4)
     fn default() -> Self {
         Self::Spaces(4)
     }
@@ -117,6 +124,7 @@ pub fn measure_escaped_string<S: AsRef<str>>(s: S) -> usize {
     }).sum()
 }
 
+/// Escapes a string.
 pub fn escape_string<S: AsRef<str>>(s: S) -> String {
     let mut buffer = String::with_capacity(measure_escaped_string(s.as_ref()));
     s.as_ref().chars().for_each(|c| {
@@ -266,7 +274,8 @@ impl Value {
     pub fn to_string_compressed(&self) -> String {
         self.to_string_formatted(JsonFormatter::new(true, true, Indent::None))
     }
-
+    
+    /// Converts [Value] to [String] with formatter.
     pub fn to_string_formatted(&self, formatter: JsonFormatter) -> String {
         let mut buffer = String::new();
         match write_value(&mut buffer, self, formatter) {
