@@ -81,6 +81,17 @@ impl JsonFormatter {
         }
         Ok(())
     }
+
+    pub fn write_separator<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
+        write!(writer, ",")?;
+        if !self.sameline {
+            write!(writer, "\n")?;
+        // Are double-negatives allowed in programming? There's not no spacing here.
+        } else if !self.no_spacing {
+            write!(writer, " ")?;
+        }
+        Ok(())
+    }
 }
 
 impl std::fmt::Display for JsonFormatter {
@@ -203,13 +214,7 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
         write_value(writer, value, indent)?;
         // Make sure it's not the final item.
         if index + 1 != array.len() {
-            write!(writer, ",")?;
-            if !formatter.sameline {
-                write!(writer, "\n")?;
-            // Are double-negatives allowed in programming? There's not no spacing here.
-            } else if !formatter.no_spacing {
-                write!(writer, " ")?;
-            }
+            formatter.write_separator(writer)?;
         }
         Ok(())
     })?;
@@ -236,13 +241,7 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
         write_value(writer, value, indent)?;
         // Make sure it's not the final item
         if index + 1 != object.len() {
-            write!(writer, ",")?;
-            if !formatter.sameline {
-                write!(writer, "\n")?;
-            // Are double-negatives allowed in programming? There's not no spacing here.
-            } else if !formatter.no_spacing {
-                write!(writer, " ")?;
-            }
+            formatter.write_separator(writer)?;
         }
         Ok(())
     })?;
