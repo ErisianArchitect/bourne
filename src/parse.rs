@@ -1,27 +1,26 @@
 // Why did the digital archaeologist get excited about old software?
 // Because they loved discovering ancient "bits" of history!
-
 use std::str::FromStr;
 
 use crate::{error::ParseError, Value, ValueMap};
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
-fn hex_value(digit: char) -> Option<u16> {
-    if digit >= '0' && digit <= '9' {
-        Some(digit as u16 - '0' as u16)
-    } else if digit >= 'a' && digit <= 'f' {
-        Some(digit as u16 - 'a' as u16 + 10)
-    } else if digit >= 'A' && digit <= 'F' {
-        Some(digit as u16 - 'A' as u16 + 10)
+fn hex_value(chr: char) -> Option<u16> {
+    if chr >= '0' && chr <= '9' {
+        Some(chr as u16 - '0' as u16)
+    } else if chr >= 'a' && chr <= 'f' {
+        Some(chr as u16 - 'a' as u16 + 10)
+    } else if chr >= 'A' && chr <= 'F' {
+        Some(chr as u16 - 'A' as u16 + 10)
     } else {
         None
     }
 }
 
 /// Unescape a string.
-pub fn unescape_string<S: AsRef<str>>(s: S) -> ParseResult<String> {
-    let s = s.as_ref();
+pub fn unescape_string<S: AsRef<str>>(string: S) -> ParseResult<String> {
+    let s = string.as_ref();
     let mut buffer = String::with_capacity(s.len());
     let mut chars = s.chars();
     while let Some(c) = chars.next() {
@@ -30,7 +29,6 @@ pub fn unescape_string<S: AsRef<str>>(s: S) -> ParseResult<String> {
             continue;
         }
         buffer.push(match chars.next() {
-            Some(single @ ('/' | '\\' | '"')) => single,
             Some('f') => '\u{c}',
             Some('b') => '\u{8}',
             Some('n') => '\n',
@@ -57,6 +55,9 @@ pub fn unescape_string<S: AsRef<str>>(s: S) -> ParseResult<String> {
                 };
                 res
             }
+            // If the character is any other character, just return the character.
+            // This allows to unescape \< to < without having to be explicit.
+            // Also, I just think it's a good idea to unescape any character.
             Some(other) => other,
             None => return Err(ParseError::UnexpectedEOF),
         });
