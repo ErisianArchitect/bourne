@@ -19,6 +19,7 @@ fn hex_value(digit: char) -> Option<u16> {
     }
 }
 
+/// Unescape a string.
 pub fn unescape_string<S: AsRef<str>>(s: S) -> ParseResult<String> {
     let s = s.as_ref();
     let mut buffer = String::with_capacity(s.len());
@@ -70,18 +71,18 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(source: &'a str) -> Self {
+    fn new(source: &'a str) -> Self {
         Self {
             source,
             index: 0,
         }
     }
 
-    pub fn is_eof(&self) -> bool {
+    fn is_eof(&self) -> bool {
         self.index >= self.source.len()
     }
 
-    pub fn peek(&self) -> Option<u8> {
+    fn peek(&self) -> Option<u8> {
         if self.index < self.source.len() {
             Some(self.source.as_bytes()[self.index])
         } else {
@@ -89,7 +90,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn check_next<F: Fn(&u8) -> bool>(&mut self, step: bool, predicate: F) -> Option<bool> {
+    fn check_next<F: Fn(&u8) -> bool>(&mut self, step: bool, predicate: F) -> Option<bool> {
         let res = predicate(&self.peek()?);
         if step && res {
             self.index += 1;
@@ -97,7 +98,7 @@ impl<'a> Parser<'a> {
         Some(res)
     }
 
-    pub fn indexed_next(&mut self) -> Option<(usize, u8)> {
+    fn indexed_next(&mut self) -> Option<(usize, u8)> {
         if self.index < self.source.len() {
             let res = Some((self.index, self.source.as_bytes()[self.index]));
             self.index += 1;
@@ -107,7 +108,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn next(&mut self) -> Option<u8> {
+    fn next(&mut self) -> Option<u8> {
         if self.index < self.source.len() {
             let res = Some(self.source.as_bytes()[self.index]);
             self.index += 1;
@@ -117,16 +118,16 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn advance(&mut self, step: usize) {
+    fn advance(&mut self, step: usize) {
         self.index += step;
     }
 
-    pub fn fork(&self) -> Self {
+    fn fork(&self) -> Self {
         self.clone()
     }
 
     /// `fork` must have been created using `fork()` method.
-    pub fn step_to(&mut self, fork: &Self) -> ParseResult<()> {
+    fn step_to(&mut self, fork: &Self) -> ParseResult<()> {
         if self.source == fork.source {
             self.index = fork.index;
             Ok(())
@@ -135,11 +136,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn rewind(&mut self) {
+    fn rewind(&mut self) {
         self.index = self.index.checked_sub(1).unwrap_or(0);
     }
 
-    pub fn matches<S: AsRef<str>>(&mut self, s: S) -> bool {
+    fn matches<S: AsRef<str>>(&mut self, s: S) -> bool {
         let s = s.as_ref();
         if self.index + s.len() <= self.source.len() {
             s == &self.source[self.index..self.index + s.len()]
@@ -148,11 +149,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn eat_whitespace(&mut self) {
+    fn eat_whitespace(&mut self) {
         while let Some(true) = self.check_next(true, u8::is_ascii_whitespace) {}
     }
 
-    pub fn parse_null(&mut self) -> ParseResult<Value> {
+    fn parse_null(&mut self) -> ParseResult<Value> {
         if self.matches("null") {
             self.advance(4);
             Ok(Value::Null)
@@ -161,7 +162,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_boolean(&mut self) -> ParseResult<bool> {
+    fn parse_boolean(&mut self) -> ParseResult<bool> {
         if self.matches("true") {
             self.advance(4);
             Ok(true)
@@ -173,7 +174,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_number(&mut self) -> ParseResult<f64> {
+    fn parse_number(&mut self) -> ParseResult<f64> {
         let mut fork = self.fork();
         // Valid characters that can follow a number: '}', ']', ',', and whitespace.
         let mut found_e = false;
@@ -208,7 +209,7 @@ impl<'a> Parser<'a> {
         Ok(value)
     }
 
-    pub fn parse_string(&mut self) -> ParseResult<String> {
+    fn parse_string(&mut self) -> ParseResult<String> {
         let mut fork = self.fork();
         match fork.peek() {
             Some(b'"') => { fork.next(); }
@@ -232,7 +233,7 @@ impl<'a> Parser<'a> {
         Ok(string)
     }
 
-    pub fn parse_array(&mut self) -> ParseResult<Vec<Value>> {
+    fn parse_array(&mut self) -> ParseResult<Vec<Value>> {
         let mut fork = self.fork();
         match fork.indexed_next() {
             Some((_, b'[')) => (),
@@ -264,7 +265,7 @@ impl<'a> Parser<'a> {
         Ok(array)
     }
 
-    pub fn parse_object(&mut self) -> ParseResult<ValueMap> {
+    fn parse_object(&mut self) -> ParseResult<ValueMap> {
         let mut fork = self.fork();
         match fork.indexed_next() {
             Some((_, b'{')) => (),
@@ -306,7 +307,7 @@ impl<'a> Parser<'a> {
         Ok(map)
     }
 
-    pub fn parse_value(&mut self) -> ParseResult<Value> {
+    fn parse_value(&mut self) -> ParseResult<Value> {
         let mut fork = self.fork();
         // Eat leading whitespace
         let value = match fork.peek() {
