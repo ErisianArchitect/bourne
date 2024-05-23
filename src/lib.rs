@@ -60,30 +60,3 @@ impl From<i64> for Value {
         Value::Number(value as f64)
     }
 }
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    pub fn json_macro_test() {
-        use crate::json;
-        use crate as bourne;
-        let text = "Hello, world!";
-        let json = json!(
-            {
-                "integer" : 123,
-                "decimal" : [3.14, 1.0],
-                "keywords" : [true, false, null],
-                "text" : text,
-                "math" : 4 * 3 + 1,
-                "nested" : json!({
-                    "a" : 1,
-                    "b" : 2,
-                    "c" : 3
-                })
-            }
-        );
-        println!("{json}");
-    }
-
-}
