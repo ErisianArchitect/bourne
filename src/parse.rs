@@ -175,15 +175,16 @@ impl<'a> Parser<'a> {
         // Valid characters that can follow a number: '}', ']', ',', and whitespace.
         let mut found_e = false;
         let mut found_dot = false;
+        let mut found_num = false;
         let start = self.index;
         if let Some(b'-' | b'+') = self.peek() {
             self.next();
         }
         while let Some((index, next)) = self.indexed_next() {
             match next {
-                b'0'..=b'9' => {}
-                b'.' if !found_dot && !found_e => found_dot = true,
-                b'e' | b'E' if !found_e => {
+                b'0'..=b'9' => found_num = true,
+                b'.' if found_num && !found_dot && !found_e => found_dot = true,
+                b'e' | b'E' if found_num && !found_e => {
                     found_e = true;
                     if matches!(self.peek(), Some(b'+' | b'-')) {
                         self.advance(1);
@@ -200,7 +201,11 @@ impl<'a> Parser<'a> {
                 _ => return Err(ParseError::InvalidCharacter(index)),
             }
         }
-        Ok(self.source[start..self.index].parse::<f64>()?)
+        if self.index - start != 0 {
+            Ok(self.source[start..self.index].parse::<f64>()?)
+        } else {
+            Err(ParseError::InvalidCharacter(self.index))
+        }
     }
 
     /// Parse a string between double quotes (`"`).
