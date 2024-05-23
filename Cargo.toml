@@ -1,0 +1,15 @@
+workspace = { members = ["bournemacro"] }
+[package]
+name = "bourne"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+preserve_order = ["dep:indexmap"]
+
+[dependencies]
+indexmap = { version = "2.2.6", optional = true }
+thiserror = "1.0.61"
+bournemacro = { path = "bournemacro" }
