@@ -1,6 +1,6 @@
 A simple JSON library written entirely in Rust.
 
-Use `preserve_order` feature to preserve element order in `Value::Object(_)`
+Use `preserve_order` feature to preserve element order in `Value::Object(_)`. This will use `indexmap`, which will incur a significant memory overhead.
 
 ```rust
 use std::str::FromStr;
