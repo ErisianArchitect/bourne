@@ -6,6 +6,7 @@ use crate::{error::ParseError, Value, ValueMap};
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
+/// Convert a hexadecimal character into a u16.
 fn hex_value(chr: char) -> Option<u16> {
     if chr >= '0' && chr <= '9' {
         Some(chr as u16 - '0' as u16)
@@ -79,10 +80,12 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Checks if the index is at the end of the stream.
     fn is_eof(&self) -> bool {
         self.index >= self.source.len()
     }
 
+    /// Takes a look at the next byte in the stream without advancing the index.
     fn peek(&self) -> Option<u8> {
         if self.index < self.source.len() {
             Some(self.source.as_bytes()[self.index])
@@ -133,6 +136,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Consumes all whitespace, advancing the index.
     fn eat_whitespace(&mut self) {
         while let Some(peek) = self.peek() {
             if peek.is_ascii_whitespace() {
@@ -143,6 +147,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse the `null` keyword and return [Value::Null] on success.
     fn parse_null(&mut self) -> ParseResult<Value> {
         if self.matches("null") {
             self.advance(4);
@@ -152,6 +157,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse `true` or `false` keywords into [bool].
     fn parse_boolean(&mut self) -> ParseResult<bool> {
         if self.matches("true") {
             self.advance(4);
@@ -164,6 +170,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a number into [f64].
     fn parse_number(&mut self) -> ParseResult<f64> {
         // Valid characters that can follow a number: '}', ']', ',', and whitespace.
         let mut found_e = false;
@@ -197,6 +204,24 @@ impl<'a> Parser<'a> {
         Ok(value)
     }
 
+    /// Parse a string between double quotes (`"`).
+    /// 
+    /// The following characters must be escaped:  
+    /// * `\u{0}`to `\u{1f}` (inclusive)
+    /// * `\n` (newline)
+    /// * `\r` (carriage return)
+    /// * `\t` (tab) (optional)
+    /// * `"`
+    /// * `'` (optional)
+    /// * `\`
+    /// * `/`
+    /// * `\u{8}`
+    /// * `\u{c}`
+    /// 
+    /// #### Example:
+    /// ```json
+    /// "Hello, world!"
+    /// ```
     fn parse_string(&mut self) -> ParseResult<String> {
         match self.peek() {
             Some(b'"') => { self.next(); }
@@ -219,6 +244,21 @@ impl<'a> Parser<'a> {
         Ok(string)
     }
 
+    /// Parse a JSON Array (JSON values in comma separated list between `[` and `]`).  
+    /// Example:
+    /// ```json
+    /// [
+    ///     true,
+    ///     false,
+    ///     null,
+    ///     3.14,
+    ///     "Hello, world!",
+    ///     [1, 2, 3],
+    ///     {
+    ///         "example" : "The quick brown fox jumps over the lazy dog."
+    ///     }
+    /// ]
+    /// ```
     fn parse_array(&mut self) -> ParseResult<Vec<Value>> {
         match self.indexed_next() {
             Some((_, b'[')) => (),
@@ -249,6 +289,17 @@ impl<'a> Parser<'a> {
         Ok(array)
     }
 
+    /// Parse a JSON Object.
+    /// 
+    /// #### Example:
+    /// ```json
+    /// {
+    ///     "null" : null,
+    ///     "boolean_array" : [false, true],
+    ///     "number" : 3.14159265358979,
+    ///     "string" : "Hello, world!",
+    /// }
+    /// ```
     fn parse_object(&mut self) -> ParseResult<ValueMap> {
         match self.indexed_next() {
             Some((_, b'{')) => (),
@@ -289,6 +340,7 @@ impl<'a> Parser<'a> {
         Ok(map)
     }
 
+    /// Parse a JSON Value.
     fn parse_value(&mut self) -> ParseResult<Value> {
         let value = match self.peek() {
             Some(b't' | b'f') => Value::Boolean(self.parse_boolean()?),
