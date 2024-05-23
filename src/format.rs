@@ -283,17 +283,3 @@ impl Value {
         }
     }
 }
-
-#[test]
-fn format_test() {
-    let src = r#"{"number":-0.31415e1,"bool":[false,true,false,],"null":null,"string":"Hello, world!"}"#;
-    let json = match Value::from_str(src) {
-        Ok(json) => json,
-        Err(error) => {
-            println!("Error: {error}");
-            return;
-        }
-    };
-    let dump = json.to_string();
-    println!("{dump}");
-}
