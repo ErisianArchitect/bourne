@@ -48,16 +48,6 @@ impl Parse for Null {
     }
 }
 
-struct Ident(syn::Ident);
-
-impl Parse for Ident {
-    fn parse(input: ParseStream) -> Result<Self> {
-        input.parse::<syn::Token![#]>()?;
-        let ident = input.parse::<syn::Ident>()?;
-        Ok(Ident(ident))
-    }
-}
-
 impl Parse for Value {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if let Ok(_) = input.parse::<Null>() {
