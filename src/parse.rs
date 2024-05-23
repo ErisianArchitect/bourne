@@ -122,20 +122,6 @@ impl<'a> Parser<'a> {
         self.index += step;
     }
 
-    fn fork(&self) -> Self {
-        self.clone()
-    }
-
-    /// `fork` must have been created using `fork()` method.
-    fn step_to(&mut self, fork: &Self) -> ParseResult<()> {
-        if self.source == fork.source {
-            self.index = fork.index;
-            Ok(())
-        } else {
-            Err(ParseError::StepToInvalidFork)
-        }
-    }
-
     fn rewind(&mut self) {
         self.index = self.index.checked_sub(1).unwrap_or(0);
     }
@@ -175,83 +161,78 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_number(&mut self) -> ParseResult<f64> {
-        let mut fork = self.fork();
         // Valid characters that can follow a number: '}', ']', ',', and whitespace.
         let mut found_e = false;
         let mut found_dot = false;
-        let start = fork.index;
-        if let Some(b'-' | b'+') = fork.peek() {
-            fork.next();
+        let start = self.index;
+        if let Some(b'-' | b'+') = self.peek() {
+            self.next();
         }
-        while let Some((index, next)) = fork.indexed_next() {
+        while let Some((index, next)) = self.indexed_next() {
             match next {
                 b'0'..=b'9' => {}
                 b'.' if !found_dot && !found_e => found_dot = true,
                 b'e' | b'E' if !found_e => {
                     found_e = true;
-                    if matches!(fork.peek(), Some(b'+' | b'-')) {
-                        fork.advance(1);
+                    if matches!(self.peek(), Some(b'+' | b'-')) {
+                        self.advance(1);
                     }
                 },
                 b'}' | b']' | b',' => {
-                    fork.rewind();
+                    self.rewind();
                     break
                 },
                 ws if ws.is_ascii_whitespace() => {
-                    fork.rewind();
+                    self.rewind();
                     break
                 },
                 _ => return Err(ParseError::InvalidCharacter(index)),
             }
         }
-        let value = fork.source[start..fork.index].parse::<f64>()?;
-        self.step_to(&fork)?;
+        let value = self.source[start..self.index].parse::<f64>()?;
         Ok(value)
     }
 
     fn parse_string(&mut self) -> ParseResult<String> {
-        let mut fork = self.fork();
-        match fork.peek() {
-            Some(b'"') => { fork.next(); }
-            Some(_) => { return Err(ParseError::InvalidCharacter(fork.index)); }
+        match self.peek() {
+            Some(b'"') => { self.next(); }
+            Some(_) => { return Err(ParseError::InvalidCharacter(self.index)); }
             None => { return Err(ParseError::UnexpectedEOF); }
         }
-        let start = fork.index;
+        let start = self.index;
         let string = loop {
-            let Some((index, next)) = fork.indexed_next() else {
+            let Some((index, next)) = self.indexed_next() else {
                 return Err(ParseError::UnexpectedEOFWhileParsingString(start));
             };
             match next {
                 // Strings should not contain new-lines.
                 b'\n' | b'\r' => { return Err(ParseError::LineBreakWhileParsingString(index)); }
-                b'"' => break unescape_string(&fork.source[start..index])?,
-                b'\\' => { fork.advance(1); }
+                b'"' => break unescape_string(&self.source[start..index])?,
+                b'\\' => { self.advance(1); }
                 _ => {}
             }
         };
-        self.step_to(&fork)?;
         Ok(string)
     }
 
     fn parse_array(&mut self) -> ParseResult<Vec<Value>> {
-        let mut fork = self.fork();
-        match fork.indexed_next() {
+        match self.indexed_next() {
             Some((_, b'[')) => (),
             Some((index, _)) => return Err(ParseError::InvalidCharacter(index)),
             None => return Err(ParseError::UnexpectedEOF),
         }
         let mut array = Vec::new();
         loop {
-            fork.eat_whitespace();
-            match fork.peek() {
+            self.eat_whitespace();
+            match self.peek() {
                 Some(b']') => {
-                    fork.advance(1);
+                    self.advance(1);
                     break;
                 }
                 Some(_) => {
-                    array.push(fork.parse_value()?);
-                    fork.eat_whitespace();
-                    match fork.indexed_next() {
+                    array.push(self.parse_value()?);
+                    self.eat_whitespace();
+                    match self.indexed_next() {
                         Some((_, b']')) => break,
                         Some((_, b',')) => continue,
                         Some((index, _)) => return Err(ParseError::InvalidCharacter(index)),
@@ -261,34 +242,32 @@ impl<'a> Parser<'a> {
                 None => return Err(ParseError::UnexpectedEOF),
             }
         }
-        self.step_to(&fork)?;
         Ok(array)
     }
 
     fn parse_object(&mut self) -> ParseResult<ValueMap> {
-        let mut fork = self.fork();
-        match fork.indexed_next() {
+        match self.indexed_next() {
             Some((_, b'{')) => (),
             Some((index, _)) => return Err(ParseError::InvalidCharacter(index)),
             None => return Err(ParseError::UnexpectedEOF),
         }
         let mut map = ValueMap::new();
         loop {
-            fork.eat_whitespace();
-            match fork.peek() {
+            self.eat_whitespace();
+            match self.peek() {
                 Some(b'"') => {
-                    let key = fork.parse_string()?;
-                    fork.eat_whitespace();
-                    match fork.indexed_next() {
+                    let key = self.parse_string()?;
+                    self.eat_whitespace();
+                    match self.indexed_next() {
                         Some((_, b':')) => (),
                         Some((index, _)) => return Err(ParseError::InvalidCharacter(index)),
                         None => return Err(ParseError::UnexpectedEOF),
                     }
-                    fork.eat_whitespace();
-                    let value = fork.parse_value()?;
+                    self.eat_whitespace();
+                    let value = self.parse_value()?;
                     map.insert(key, value);
-                    fork.eat_whitespace();
-                    match fork.indexed_next() {
+                    self.eat_whitespace();
+                    match self.indexed_next() {
                         Some((_, b',')) => continue,
                         Some((_, b'}')) => break,
                         Some((index, _)) => return Err(ParseError::InvalidCharacter(index)),
@@ -296,30 +275,27 @@ impl<'a> Parser<'a> {
                     }
                 }
                 Some(b'}') => {
-                    fork.next();
+                    self.next();
                     break;
                 }
-                Some(_) => return Err(ParseError::InvalidCharacter(fork.index)),
+                Some(_) => return Err(ParseError::InvalidCharacter(self.index)),
                 None => return Err(ParseError::UnexpectedEOF),
             }
         }
-        self.step_to(&fork)?;
         Ok(map)
     }
 
     fn parse_value(&mut self) -> ParseResult<Value> {
-        let mut fork = self.fork();
-        let value = match fork.peek() {
-            Some(b't' | b'f') => Value::Boolean(fork.parse_boolean()?),
-            Some(b'n') => fork.parse_null()?,
-            Some(b'"') => Value::String(fork.parse_string()?),
-            Some(b'{') => Value::Object(fork.parse_object()?),
-            Some(b'[') => Value::Array(fork.parse_array()?),
-            Some(b'+' | b'-' | b'0'..=b'9') => Value::Number(fork.parse_number()?),
-            Some(_) => return Err(ParseError::InvalidCharacter(fork.index)),
+        let value = match self.peek() {
+            Some(b't' | b'f') => Value::Boolean(self.parse_boolean()?),
+            Some(b'n') => self.parse_null()?,
+            Some(b'"') => Value::String(self.parse_string()?),
+            Some(b'{') => Value::Object(self.parse_object()?),
+            Some(b'[') => Value::Array(self.parse_array()?),
+            Some(b'+' | b'-' | b'0'..=b'9') => Value::Number(self.parse_number()?),
+            Some(_) => return Err(ParseError::InvalidCharacter(self.index)),
             None => return Err(ParseError::UnexpectedEOF),
         };
-        self.step_to(&fork)?;
         Ok(value)
     }
 }
@@ -338,20 +314,3 @@ impl FromStr for Value {
         }
     }
 }
-
-#[test]
-fn quick() {
-    let s = r#"{"number":-0.31415e1,"bool":[false,true,false],"null":null,"string":"Hello, world!"}"#;
-    let value = Value::from_str(s);
-    println!("{value:#?}");
-    // match parse_number(&mut parser) {
-    //     Ok(number) => {
-    //         println!("Number: {number}");
-    //     }
-    //     Err(err) => {
-    //         println!("{err}");
-    //     }
-    // }
-}
-
-// fn parse_value(parser: &mut Parser<'_>)
