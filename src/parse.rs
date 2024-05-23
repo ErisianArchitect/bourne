@@ -91,14 +91,20 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn check_next<F: Fn(&u8) -> bool>(&mut self, step: bool, predicate: F) -> Option<bool> {
+    /// Checks the next byte in the stream against predicate and advances the stream if there is a match.
+    fn eat_next<F: Fn(&u8) -> bool>(&mut self, predicate: F) -> Option<bool> {
         let res = predicate(&self.peek()?);
-        if step && res {
+        if res {
             self.index += 1;
         }
         Some(res)
     }
 
+    fn check_next<F: Fn(&u8) -> bool>(&self, predicate: F) -> Option<bool> {
+        Some(predicate(&self.peek()?))
+    }
+
+    /// Retrieve the next byte paired with its index, advancing the parser in the process.
     fn indexed_next(&mut self) -> Option<(usize, u8)> {
         if self.index < self.source.len() {
             let res = Some((self.index, self.source.as_bytes()[self.index]));
@@ -109,6 +115,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Retrieve the next byte, advancing the parser in the process.
     fn next(&mut self) -> Option<u8> {
         if self.index < self.source.len() {
             let res = Some(self.source.as_bytes()[self.index]);
@@ -119,16 +126,19 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Advance the index by `step`.
     fn advance(&mut self, step: usize) {
         self.index += step;
     }
 
+    /// Decrement the index by one.
     fn rewind(&mut self) {
         self.index = self.index.checked_sub(1).unwrap_or(0);
     }
 
-    fn matches<S: AsRef<str>>(&mut self, s: S) -> bool {
-        let s = s.as_ref();
+    /// Checks if the parser matches text at the current index.
+    fn matches<S: AsRef<str>>(&mut self, text: S) -> bool {
+        let s = text.as_ref();
         if self.index + s.len() <= self.source.len() {
             s == &self.source[self.index..self.index + s.len()]
         } else {
@@ -137,7 +147,7 @@ impl<'a> Parser<'a> {
     }
 
     fn eat_whitespace(&mut self) {
-        while let Some(true) = self.check_next(true, u8::is_ascii_whitespace) {}
+        while let Some(true) = self.eat_next(u8::is_ascii_whitespace) {}
     }
 
     fn parse_null(&mut self) -> ParseResult<Value> {
