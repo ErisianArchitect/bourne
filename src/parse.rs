@@ -309,7 +309,6 @@ impl<'a> Parser<'a> {
 
     fn parse_value(&mut self) -> ParseResult<Value> {
         let mut fork = self.fork();
-        // Eat leading whitespace
         let value = match fork.peek() {
             Some(b't' | b'f') => Value::Boolean(fork.parse_boolean()?),
             Some(b'n') => fork.parse_null()?,
