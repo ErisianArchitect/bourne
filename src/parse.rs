@@ -315,7 +315,8 @@ impl<'a> Parser<'a> {
             Some(b'"') => Value::String(fork.parse_string()?),
             Some(b'{') => Value::Object(fork.parse_object()?),
             Some(b'[') => Value::Array(fork.parse_array()?),
-            Some(_) => Value::Number(fork.parse_number()?),
+            Some(b'+' | b'-' | b'0'..=b'9') => Value::Number(fork.parse_number()?),
+            Some(_) => return  Err(ParseError::InvalidCharacter(fork.index)),
             None => return Err(ParseError::UnexpectedEOF),
         };
         self.step_to(&fork)?;
