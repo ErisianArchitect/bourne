@@ -200,8 +200,7 @@ impl<'a> Parser<'a> {
                 _ => return Err(ParseError::InvalidCharacter(index)),
             }
         }
-        let value = self.source[start..self.index].parse::<f64>()?;
-        Ok(value)
+        Ok(self.source[start..self.index].parse::<f64>()?)
     }
 
     /// Parse a string between double quotes (`"`).
