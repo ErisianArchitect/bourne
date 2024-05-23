@@ -8,6 +8,7 @@ pub type ValueMap = std::collections::HashMap<String, Value>;
 #[cfg(feature = "preserve_order")]
 pub type ValueMap = indexmap::IndexMap<String, Value>;
 
+/// JSON Value.
 #[derive(Debug, Clone)]
 pub enum Value {
     Null,
