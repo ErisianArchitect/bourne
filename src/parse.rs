@@ -6,17 +6,41 @@ use crate::{error::ParseError, Value, ValueMap};
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
-/// Convert a hexadecimal character into a u16.
-fn hex_value(chr: char) -> Option<u16> {
-    if chr >= '0' && chr <= '9' {
-        Some(chr as u16 - '0' as u16)
-    } else if chr >= 'a' && chr <= 'f' {
-        Some(chr as u16 - 'a' as u16 + 10)
-    } else if chr >= 'A' && chr <= 'F' {
-        Some(chr as u16 - 'A' as u16 + 10)
-    } else {
-        None
+trait HexValue {
+    fn hex_value(self) -> Option<u16>;
+}
+
+impl HexValue for char {
+    fn hex_value(self) -> Option<u16> {
+        if self >= '0' && self <= '9' {
+            Some(self as u16 - '0' as u16)
+        } else if self >= 'a' && self <= 'f' {
+            Some(self as u16 - 'a' as u16 + 10)
+        } else if self >= 'A' && self <= 'F' {
+            Some(self as u16 - 'A' as u16 + 10)
+        } else {
+            None
+        }
     }
+}
+
+impl HexValue for u8 {
+    fn hex_value(self) -> Option<u16> {
+        if self >= b'0' && self <= b'9' {
+            Some(self as u16 - b'0' as u16)
+        } else if self >= b'a' && self <= b'f' {
+            Some(self as u16 - b'a' as u16 + 10)
+        } else if self >= b'A' && self <= b'F' {
+            Some(self as u16 - b'A' as u16 + 10)
+        } else {
+            None
+        }
+    }
+}
+
+/// Convert a hexadecimal character into a u16.
+fn hex_value<T: HexValue>(chr: T) -> Option<u16> {
+    chr.hex_value()
 }
 
 /// Unescape a string.
@@ -66,10 +90,11 @@ pub fn unescape_string<S: AsRef<str>>(string: S) -> ParseResult<String> {
     Ok(buffer)
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct Parser<'a> {
     source: &'a str,
     index: usize,
+    buffer: String,
 }
 
 impl<'a> Parser<'a> {
@@ -77,6 +102,7 @@ impl<'a> Parser<'a> {
         Self {
             source,
             index: 0,
+            buffer: String::with_capacity(256),
         }
     }
 
@@ -105,6 +131,16 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn indexed_next_char(&mut self) -> Option<(usize, char)> {
+        if self.index >= self.source.len() {
+            return None;
+        }
+        let src = &self.source[self.index..];
+        let (index, res) = (self.index, src.chars().next()?);
+        self.index += res.len_utf8();
+        Some((index, res))
+    }
+
     /// Retrieve the next byte, advancing the parser in the process.
     fn next(&mut self) -> Option<u8> {
         if self.index < self.source.len() {
@@ -114,6 +150,16 @@ impl<'a> Parser<'a> {
         } else {
             None
         }
+    }
+
+    fn next_char(&mut self) -> Option<char> {
+        if self.index >= self.source.len() {
+            return None;
+        }
+        let src = &self.source[self.index..];
+        let res = src.chars().next()?;
+        self.index += res.len_utf8();
+        Some(res)
     }
 
     /// Advance the index by `step`.
@@ -232,18 +278,50 @@ impl<'a> Parser<'a> {
             Some(_) => { return Err(ParseError::InvalidCharacter(self.index)); }
             None => { return Err(ParseError::UnexpectedEOF); }
         }
+        self.buffer.clear();
         let start = self.index;
         let string = loop {
-            let Some((index, next)) = self.indexed_next() else {
+            let Some((index, next)) = self.indexed_next_char() else {
                 return Err(ParseError::UnexpectedEOFWhileParsingString(start));
             };
-            match next {
+            let push = match next {
                 // Strings should not contain new-lines.
-                b'\n' | b'\r' => { return Err(ParseError::LineBreakWhileParsingString(index)); }
-                b'"' => break unescape_string(&self.source[start..index])?,
-                b'\\' => { self.advance(1); }
-                _ => {}
-            }
+                '\n' | '\r' => { return Err(ParseError::LineBreakWhileParsingString(index)); }
+                '"' => break self.buffer.clone(),
+                '\\' => {
+                    match self.indexed_next_char() {
+                        Some((_, 'f')) => '\u{c}',
+                        Some((_, 'b')) => '\u{8}',
+                        Some((_, 'n')) => '\n',
+                        Some((_, 'r')) => '\r',
+                        Some((_, 't')) => '\t',
+                        Some((_, 'u')) => {
+                            let mut hex: u16 = 0;
+                            for i in 0..4 {
+                                let Some(digit) = self.next_char() else {
+                                    return Err(ParseError::UnexpectedEOF);
+                                };
+                                let Some(value) = hex_value(digit) else {
+                                    // TODO Improve error handling by adding index
+                                    return Err(ParseError::InvalidHex);
+                                };
+                                hex |= value;
+                                if i < 3 {
+                                    hex <<= 4;
+                                }
+                            }
+                            let Some(res) = char::from_u32(hex as u32) else {
+                                return Err(ParseError::InvalidEscapeSequence);
+                            };
+                            res
+                        }
+                        Some((_, other)) => other as char,
+                        None => return Err(ParseError::UnexpectedEOF),
+                    }
+                }
+                other => other,
+            };
+            self.buffer.push(push);
         };
         Ok(string)
     }
