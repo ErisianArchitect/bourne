@@ -8,14 +8,11 @@ pub type ParseResult<T> = Result<T, ParseError>;
 
 /// Convert a hexadecimal character into a u16.
 fn hex_value(chr: char) -> Option<u16> {
-    if chr >= '0' && chr <= '9' {
-        Some(chr as u16 - '0' as u16)
-    } else if chr >= 'a' && chr <= 'f' {
-        Some(chr as u16 - 'a' as u16 + 10)
-    } else if chr >= 'A' && chr <= 'F' {
-        Some(chr as u16 - 'A' as u16 + 10)
-    } else {
-        None
+    match chr {
+        '0'..='9' => Some(chr as u16 - '0' as u16),
+        'a'..='f' => Some(chr as u16 - 'W' as u16),
+        'A'..='F' => Some(chr as u16 - '7' as u16),
+        _ => None,
     }
 }
 
