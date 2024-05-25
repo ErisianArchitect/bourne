@@ -1,6 +1,16 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
+pub enum BourneError {
+    #[error("Parse Error: {0}")]
+    ParseError(#[from]ParseError),
+    #[error("Attempted to push to a Value that was not an array.")]
+    PushToNonArray,
+    #[error("Attempted to insert into a Value that was not an object.")]
+    InsertToNonObject,
+}
+
+#[derive(Debug, Error)]
 pub enum ParseError {
     #[error("Attempted to step to an invalid fork. Fork must have been created from the parser that you wish to join to.")]
     StepToInvalidFork,
