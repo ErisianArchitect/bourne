@@ -346,7 +346,7 @@ impl<'a> Parser<'a> {
 
     /// Parse a JSON Value.
     fn parse_value(&mut self) -> ParseResult<Value> {
-        let value = match self.peek() {
+        Ok(match self.peek() {
             Some(b't' | b'f') => Value::Boolean(self.parse_boolean()?),
             Some(b'n') => self.parse_null()?,
             Some(b'"') => Value::String(self.parse_string()?),
@@ -355,8 +355,7 @@ impl<'a> Parser<'a> {
             Some(b'+' | b'-' | b'0'..=b'9') => Value::Number(self.parse_number()?),
             Some(_) => return Err(ParseError::InvalidCharacter(self.index)),
             None => return Err(ParseError::UnexpectedEOF),
-        };
-        Ok(value)
+        })
     }
 }
 
