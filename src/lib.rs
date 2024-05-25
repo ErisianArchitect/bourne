@@ -60,3 +60,23 @@ impl From<i64> for Value {
         Value::Number(value as f64)
     }
 }
+
+pub trait ArrayExt {
+    fn push_value<T: Into<Value>>(&mut self, value: T);
+}
+
+impl ArrayExt for Vec<Value> {
+    fn push_value<T: Into<Value>>(&mut self, value: T) {
+        self.push(value.into());
+    }
+}
+
+pub trait ObjectExt {
+    fn insert_value<T: Into<Value>>(&mut self, key: String, value: T) -> Option<Value>;
+}
+
+impl ObjectExt for ValueMap {
+    fn insert_value<T: Into<Value>>(&mut self, k: String, v: T) -> Option<Value> {
+        self.insert(k, v.into())
+    }
+}
