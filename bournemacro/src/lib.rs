@@ -128,6 +128,10 @@ impl Value {
 /// ```
 #[proc_macro]
 pub fn json(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let value = parse_macro_input!(input as Value);
-    value.to_tokenstream().into()
+    if input.is_empty() {
+        quote::quote!{ bourne::Value::Null }.into()
+    } else {
+        let value = parse_macro_input!(input as Value);
+        value.to_tokenstream().into()
+    }
 }
