@@ -10,7 +10,10 @@ pub type ParseResult<T> = Result<T, ParseError>;
 fn hex_value(chr: char) -> Option<u16> {
     match chr {
         '0'..='9' => Some(chr as u16 - '0' as u16),
+        // The reason for subtracting 'W' is because 'W' is 10 less than 'a',
+        // allowing to not have to add 10 to the result of chr - 'a'.
         'a'..='f' => Some(chr as u16 - 'W' as u16),
+        // Same reasoning as above for subtracting 7.
         'A'..='F' => Some(chr as u16 - '7' as u16),
         _ => None,
     }
