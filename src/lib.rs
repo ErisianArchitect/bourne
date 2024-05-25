@@ -2,7 +2,6 @@ pub mod error;
 pub mod parse;
 pub mod format;
 pub use bournemacro::json;
-use error::BourneError;
 
 #[cfg(not(feature = "preserve_order"))]
 pub type ValueMap = std::collections::HashMap<String, Value>;
@@ -83,7 +82,7 @@ impl IndexOrKey for usize {
         array.get_mut(self)
     }
 
-    fn get_or_insert(self, value: &mut Value) -> &mut Value {
+    fn get_or_insert(self, _value: &mut Value) -> &mut Value {
         panic!();
     }
 }
