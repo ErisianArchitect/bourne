@@ -65,6 +65,7 @@ impl From<i64> for Value {
 pub trait IndexOrKey {
     fn get(self, value: &Value) -> Option<&Value>;
     fn get_mut(self, value: &mut Value) -> Option<&mut Value>;
+    fn get_or_insert(self, value: &mut Value) -> &mut Value;
 }
 
 impl IndexOrKey for usize {
@@ -80,6 +81,10 @@ impl IndexOrKey for usize {
             return None;
         };
         array.get_mut(self)
+    }
+
+    fn get_or_insert(self, value: &mut Value) -> &mut Value {
+        panic!();
     }
 }
 
@@ -97,22 +102,57 @@ impl IndexOrKey for &str {
         };
         object.get_mut(self)
     }
+
+    fn get_or_insert(self, value: &mut Value) -> &mut Value {
+        if let Value::Null = value {
+            *value = Value::Object(ValueMap::new());
+        }
+        match value {
+            Value::Object(object) => object.entry(self.to_owned()).or_insert(Value::Null),
+            _ => panic!()
+        }
+    }
+}
+
+impl IndexOrKey for String {
+    fn get(self, value: &Value) -> Option<&Value> {
+        let Value::Object(object) = value else {
+            return None;
+        };
+        object.get(&self)
+    }
+
+    fn get_mut(self, value: &mut Value) -> Option<&mut Value> {
+        let Value::Object(object) = value else {
+            return None;
+        };
+        object.get_mut(&self)
+    }
+
+    fn get_or_insert(self, value: &mut Value) -> &mut Value {
+        if let Value::Null = value {
+            *value = Value::Object(ValueMap::new());
+        }
+        match value {
+            Value::Object(object) => object.entry(self).or_insert(Value::Null),
+            _ => panic!()
+        }
+    }
 }
 
 impl Value {
-    pub fn push<T: Into<Value>>(&mut self, value: T) -> Result<(), BourneError> {
+    pub fn push<T: Into<Value>>(&mut self, value: T) {
         let Value::Array(array) = self else {    
-            return Err(BourneError::PushToNonArray);
+            panic!("Not an array.");
         };
         array.push(value.into());
-        Ok(())
     }
 
-    pub fn insert<T: Into<Value>>(&mut self, k: String, v: T) -> Result<Option<Value>, BourneError> {
+    pub fn insert<T: Into<Value>>(&mut self, k: String, v: T) -> Option<Value> {
         let Value::Object(object) = self else {
-            return Err(BourneError::InsertToNonObject);
+            panic!("Not an object.");
         };
-        Ok(object.insert(k, v.into()))
+        object.insert(k, v.into())
     }
 
     pub fn get<I: IndexOrKey>(&self, i_k: I) -> Option<&Value> {
@@ -121,6 +161,20 @@ impl Value {
 
     pub fn get_mut<I: IndexOrKey>(&mut self, i_k: I) -> Option<&mut Value> {
         i_k.get_mut(self)
+    }
+}
+
+impl<I: IndexOrKey> std::ops::Index<I> for Value {
+    type Output = Value;
+    fn index(&self, index: I) -> &Self::Output {
+        static NULL: Value = Value::Null;
+        index.get(self).unwrap_or(&NULL)
+    }
+}
+
+impl<I: IndexOrKey> std::ops::IndexMut<I> for Value {
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        index.get_or_insert(self)
     }
 }
 
