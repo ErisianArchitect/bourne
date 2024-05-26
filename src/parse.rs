@@ -280,7 +280,7 @@ impl<'a> Parser<'a> {
         }
         self.buffer.clear();
         let start = self.index;
-        let string = loop {
+        let mut string = loop {
             let Some((index, next)) = self.indexed_next_char() else {
                 return Err(ParseError::UnexpectedEOFWhileParsingString(start));
             };
@@ -321,8 +321,10 @@ impl<'a> Parser<'a> {
                 }
                 other => other,
             };
+            
             self.buffer.push(push);
         };
+        string.shrink_to_fit();
         Ok(string)
     }
 
