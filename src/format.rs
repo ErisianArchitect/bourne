@@ -11,7 +11,6 @@ use crate::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Indent {
-    None,
     Spaces(u8),
     Tabs(u8),
 }
@@ -30,7 +29,6 @@ impl std::fmt::Display for Indent {
             Ok(())
         }
         match self {
-            Self::None => {}
             &Self::Spaces(count) => write_all(f, SPACES, count)?,
             &Self::Tabs(count) => write_all(f, TABS, count)?,
         }
@@ -121,7 +119,7 @@ fn hex_char(value: u16, slot: usize) -> char {
 pub fn measure_escaped_string<S: AsRef<str>>(s: S) -> usize {
     s.as_ref().chars().map(|c| {
         match c {
-            '/' => 2,
+            // '/' => 2,
             '\\' => 2,
             '"' => 2,
             '\u{c}' => 2,
@@ -140,7 +138,7 @@ pub fn escape_string<S: AsRef<str>>(s: S) -> String {
     let mut buffer = String::with_capacity(measure_escaped_string(s.as_ref()));
     s.as_ref().chars().for_each(|c| {
         match c {
-            '/' => buffer.push_str("\\/"),
+            // '/' => buffer.push_str("\\/"),
             '\\' => buffer.push_str("\\\\"),
             '"' => buffer.push_str("\\\""),
             '\u{c}' => buffer.push_str("\\f"),
@@ -164,7 +162,7 @@ pub fn escape_string<S: AsRef<str>>(s: S) -> String {
 fn write_escaped_string<W: Write, S: AsRef<str>>(writer: &mut W, s: S) -> std::fmt::Result {
     s.as_ref().chars().try_for_each(|c| {
         match c {
-            '/' => write!(writer, "\\/")?,
+            // '/' => write!(writer, "\\/")?,
             '\\' => write!(writer, "\\\\")?,
             '"' => write!(writer, "\\\"")?,
             '\u{c}' => write!(writer, "\\f")?,
@@ -264,22 +262,29 @@ fn write_value<W: Write>(writer: &mut W, value: &Value, formatter: JsonFormatter
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write_value(f, self, JsonFormatter::default())
+        write_value(f, self, JsonFormatter::new(true, true, Indent::Spaces(0)))
+    }
+}
+
+pub struct PrettyPrint<'a>(&'a Value, Indent, bool);
+
+impl<'a> std::fmt::Display for PrettyPrint<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write_value(f, self.0, JsonFormatter::new(false, self.2, self.1))
     }
 }
 
 impl Value {
-    /// Converts [Value] to [String] with no whitespace.
-    pub fn to_string_compressed(&self) -> String {
-        self.to_string_formatted(JsonFormatter::new(true, true, Indent::None))
+
+    /// Returns an object suitable for pretty printing.
+    /// #### Arguments:
+    /// - `indent`: Controls the indentation. Use `Indent::Spaces(0)` if you don't want indentation (This defeats the purpose of pretty printing).
+    /// - `spacing`: Determines whether or not there are spaces before and after colons.
+    pub fn pretty_print_format(&self, indent: Indent, spacing: bool) -> PrettyPrint<'_> {
+        PrettyPrint(self, indent, !spacing)
     }
-    
-    /// Converts [Value] to [String] with formatter.
-    pub fn to_string_formatted(&self, formatter: JsonFormatter) -> String {
-        let mut buffer = String::new();
-        match write_value(&mut buffer, self, formatter) {
-            Ok(()) => buffer,
-            Err(_) => unreachable!()
-        }
+
+    pub fn pretty_print(&self) -> PrettyPrint<'_> {
+        PrettyPrint(self, Indent::Spaces(2), false)
     }
 }
