@@ -48,6 +48,17 @@ struct JsonFormatter {
     indent_level: u32,
 }
 
+struct Indentation<'a>(&'a JsonFormatter);
+
+impl<'a> std::fmt::Display for Indentation<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for _ in 0..self.0.indent_level {
+            write!(f, "{}", self.0.indent)?;
+        }
+        Ok(())
+    }
+}
+
 impl JsonFormatter {
     fn new(sameline: bool, no_spacing: bool, indent: Indent) -> Self {
         Self::new_indented(0, sameline, no_spacing, indent)
@@ -69,12 +80,14 @@ impl JsonFormatter {
         indent
     }
 
+    #[inline(always)]
+    fn indentation(&self) -> Indentation<'_> {
+        Indentation(self)
+    }
+
     /// Writes the indentation to a writer.
     fn write_indent<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
-        for _ in 0..self.indent_level {
-            write!(writer, "{}", self.indent)?;
-        }
-        Ok(())
+        write!(writer, "{}", self.indentation())
     }
 
     fn write_separator<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
@@ -185,7 +198,7 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
     }
     let indent = formatter.indent();
     array.iter().enumerate().try_for_each(|(index, value)| {
-        write!(writer, "{indent}")?;
+        write!(writer, "{}", indent.indentation())?;
         write_value(writer, value, indent)?;
         // Make sure it's not the final item.
         if index + 1 != array.len() {
@@ -196,7 +209,7 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
     if !formatter.sameline {
         write!(writer, "\n")?;
     }
-    write!(writer, "{formatter}]")
+    write!(writer, "{}]", formatter.indentation())
 }
 
 fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonFormatter) -> std::fmt::Result {
@@ -206,7 +219,7 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
     }
     let indent = formatter.indent();
     object.iter().enumerate().try_for_each(|(index, (key, value))| {
-        write!(writer, "{indent}")?;
+        write!(writer, "{}", indent.indentation())?;
         write_string(writer, key)?;
         if indent.no_spacing {
             write!(writer, ":")?;
@@ -223,7 +236,7 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
     if !formatter.sameline {
         write!(writer, "\n")?;
     }
-    write!(writer, "{formatter}}}")
+    write!(writer, "{}}}", formatter.indentation())
 }
 
 fn write_value<W: Write>(writer: &mut W, value: &Value, formatter: JsonFormatter) -> std::fmt::Result {
