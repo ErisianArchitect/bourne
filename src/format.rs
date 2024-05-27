@@ -212,7 +212,7 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
         write_value(writer, value, indent)?;
         // Make sure it's not the final item.
         if index + 1 != array.len() {
-            formatter.write_separator(writer)?;
+            indent.write_separator(writer)?;
         }
         Ok(())
     })?;
@@ -231,7 +231,7 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
     object.iter().enumerate().try_for_each(|(index, (key, value))| {
         write!(writer, "{indent}")?;
         write_string(writer, key)?;
-        if formatter.no_spacing {
+        if indent.no_spacing {
             write!(writer, ":")?;
         } else {
             write!(writer, " : ")?;
@@ -239,7 +239,7 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
         write_value(writer, value, indent)?;
         // Make sure it's not the final item
         if index + 1 != object.len() {
-            formatter.write_separator(writer)?;
+            indent.write_separator(writer)?;
         }
         Ok(())
     })?;
