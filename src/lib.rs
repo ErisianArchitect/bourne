@@ -143,17 +143,17 @@ impl IndexOrKey for String {
 }
 
 pub trait InsertKey {
-    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value>;
+    fn insert_into(self, map: &mut ValueMap, value: Value) -> Option<Value>;
 }
 
 impl InsertKey for String {
-    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value> {
+    fn insert_into(self, map: &mut ValueMap, value: Value) -> Option<Value> {
         map.insert(self, value)
     }
 }
 
 impl InsertKey for &str {
-    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value> {
+    fn insert_into(self, map: &mut ValueMap, value: Value) -> Option<Value> {
         map.insert(self.to_owned(), value)
     }
 }
@@ -176,7 +176,7 @@ impl Value {
         let Value::Object(object) = self else {
             panic!("Not an object.");
         };
-        k.insert(object, v.into())
+        k.insert_into(object, v.into())
     }
 
     pub fn get<I: IndexOrKey>(&self, i_k: I) -> Option<&Value> {
