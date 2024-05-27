@@ -64,12 +64,9 @@ impl JsonFormatter {
 
     /// Creates a copy of self where the indent level is incremented by 1.
     pub fn indent(&self) -> Self {
-        Self {
-            sameline: self.sameline,
-            no_spacing: self.no_spacing,
-            indent: self.indent,
-            indent_level: self.indent_level + 1,
-        }
+        let mut indent = self.clone();
+        indent.indent_level += 1;
+        indent
     }
 
     /// Writes the indentation to a writer.
