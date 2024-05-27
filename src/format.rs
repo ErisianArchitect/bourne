@@ -138,26 +138,6 @@ pub fn escape_string<S: AsRef<str>>(s: S) -> String {
     let mut buffer = String::with_capacity(measure_escaped_string(s.as_ref()));
     // Writing to a String is infallible (I think), so this should never fail.
     write_escaped_string(&mut buffer, s).unwrap();
-    // s.as_ref().chars().for_each(|c| {
-    //     match c {
-    //         // '/' => buffer.push_str("\\/"),
-    //         '\\' => buffer.push_str("\\\\"),
-    //         '"' => buffer.push_str("\\\""),
-    //         '\u{c}' => buffer.push_str("\\f"),
-    //         '\u{8}' => buffer.push_str("\\b"),
-    //         '\n' => buffer.push_str("\\n"),
-    //         '\r' => buffer.push_str("\\r"),
-    //         '\t' => buffer.push_str("\\t"),
-    //         '\u{0}'..='\u{1f}' => {
-    //             let hex = c as u16;
-    //             buffer.push_str("\\u00");
-    //             for i in (0..2).rev() {
-    //                 buffer.push(hex_char(hex, i));
-    //             }
-    //         }
-    //         _ => buffer.push(c),
-    //     }
-    // });
     buffer
 }
 
