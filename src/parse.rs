@@ -130,7 +130,7 @@ impl<'a> Parser<'a> {
     fn matches<S: AsRef<str>>(&mut self, text: S) -> bool {
         let s = text.as_ref();
         if self.index + s.len() <= self.source.len() {
-            s == &self.source[self.index..self.index + s.len()]
+            self.source[self.index..].starts_with(s)
         } else {
             false
         }
