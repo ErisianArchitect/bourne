@@ -37,7 +37,7 @@ impl std::fmt::Display for Indent {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct JsonFormatter {
+struct JsonFormatter {
     /// All on the same line.
     sameline: bool,
     /// No spaces between elements or around colons.
@@ -49,11 +49,11 @@ pub struct JsonFormatter {
 }
 
 impl JsonFormatter {
-    pub fn new(sameline: bool, no_spacing: bool, indent: Indent) -> Self {
+    fn new(sameline: bool, no_spacing: bool, indent: Indent) -> Self {
         Self::new_indented(0, sameline, no_spacing, indent)
     }
 
-    pub fn new_indented(indent_level: u32, sameline: bool, no_spacing: bool, indent: Indent) -> Self {
+    fn new_indented(indent_level: u32, sameline: bool, no_spacing: bool, indent: Indent) -> Self {
         Self {
             sameline,
             no_spacing,
@@ -63,21 +63,21 @@ impl JsonFormatter {
     }
 
     /// Creates a copy of self where the indent level is incremented by 1.
-    pub fn indent(&self) -> Self {
+    fn indent(&self) -> Self {
         let mut indent = self.clone();
         indent.indent_level += 1;
         indent
     }
 
     /// Writes the indentation to a writer.
-    pub fn write_indent<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
+    fn write_indent<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
         for _ in 0..self.indent_level {
             write!(writer, "{}", self.indent)?;
         }
         Ok(())
     }
 
-    pub fn write_separator<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
+    fn write_separator<W: Write>(&self, writer: &mut W) -> std::fmt::Result {
         write!(writer, ",")?;
         if !self.sameline {
             write!(writer, "\n")?;
