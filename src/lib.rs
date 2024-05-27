@@ -164,7 +164,7 @@ impl Value {
         if let Value::Null = self {
             *self = Value::Array(Vec::new());
         }
-        let Value::Array(array) = self else {    
+        let Value::Array(array) = self else {
             panic!("Not an array.");
         };
         array.push(value.into());
