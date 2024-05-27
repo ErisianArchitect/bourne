@@ -347,8 +347,8 @@ impl<'a> Parser<'a> {
     /// Parse a JSON Value.
     fn parse_value(&mut self) -> ParseResult<Value> {
         Ok(match self.peek() {
-            Some(b't' | b'f') => Value::Boolean(self.parse_boolean()?),
             Some(b'n') => self.parse_null()?,
+            Some(b't' | b'f') => Value::Boolean(self.parse_boolean()?),
             Some(b'"') => Value::String(self.parse_string()?),
             Some(b'{') => Value::Object(self.parse_object()?),
             Some(b'[') => Value::Array(self.parse_array()?),
