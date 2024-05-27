@@ -84,26 +84,28 @@ impl Value {
         match self {
             Value::Null => quote!(bourne::Value::Null),
             Value::Object(object) => {
+                let capacity = object.len();
                 let inserts = object.into_iter().map(|KeyValuePair { key, value }| {
                     let value = value.to_tokenstream();
                     quote! { map.insert((#key).to_owned(), #value); }
                 }).collect::<Vec<_>>();
                 quote! {
                     {
-                        let mut map = bourne::ValueMap::new();
+                        let mut map = bourne::ValueMap::with_capacity(#capacity);
                         #(#inserts)*
                         bourne::Value::Object(map)
                     }
                 }
             },
             Value::Array(array) => {
+                let capacity = array.len();
                 let lines = array.into_iter().map(|value| {
                     let value = value.to_tokenstream();
                     quote!{ array.push(#value); }
                 }).collect::<Vec<_>>();
                 quote! {
                     {
-                        let mut array = Vec::<bourne::Value>::new();
+                        let mut array = Vec::<bourne::Value>::with_capacity(#capacity);
                         #(#lines)*
                         bourne::Value::Array(array)
                     }
