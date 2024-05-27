@@ -83,7 +83,10 @@ impl IndexOrKey for usize {
     }
 
     fn get_or_insert(self, _value: &mut Value) -> &mut Value {
-        panic!();
+        let Value::Array(array) = _value else {
+            panic!("Not an array.");
+        };
+        &mut array[self]
     }
 }
 
@@ -108,7 +111,7 @@ impl IndexOrKey for &str {
         }
         match value {
             Value::Object(object) => object.entry(self.to_owned()).or_insert(Value::Null),
-            _ => panic!()
+            _ => panic!("Not an object.")
         }
     }
 }
@@ -134,7 +137,7 @@ impl IndexOrKey for String {
         }
         match value {
             Value::Object(object) => object.entry(self).or_insert(Value::Null),
-            _ => panic!()
+            _ => panic!("Not an object.")
         }
     }
 }
