@@ -144,7 +144,6 @@ pub fn escape_string<S: AsRef<str>>(s: S) -> String {
 fn write_escaped_string<W: Write, S: AsRef<str>>(writer: &mut W, s: S) -> std::fmt::Result {
     s.as_ref().chars().try_for_each(|c| {
         match c {
-            // '/' => write!(writer, "\\/")?,
             '\\' => write!(writer, "\\\\")?,
             '"' => write!(writer, "\\\"")?,
             '\u{c}' => write!(writer, "\\f")?,
