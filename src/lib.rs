@@ -164,6 +164,15 @@ impl Value {
     pub fn get_mut<I: IndexOrKey>(&mut self, i_k: I) -> Option<&mut Value> {
         i_k.get_mut(self)
     }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Value::String(string) => string.len(),
+            Value::Array(array) => array.len(),
+            Value::Object(object) => object.len(),
+            _ => 0,
+        }
+    }
 }
 
 impl<I: IndexOrKey> std::ops::Index<I> for Value {
