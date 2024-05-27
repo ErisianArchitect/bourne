@@ -144,6 +144,9 @@ impl IndexOrKey for String {
 
 impl Value {
     pub fn push<T: Into<Value>>(&mut self, value: T) {
+        if let Value::Null = self {
+            *self = Value::Array(Vec::new());
+        }
         let Value::Array(array) = self else {    
             panic!("Not an array.");
         };
@@ -151,6 +154,9 @@ impl Value {
     }
 
     pub fn insert<T: Into<Value>>(&mut self, k: String, v: T) -> Option<Value> {
+        if let Value::Null = self {
+            *self = Value::Object(ValueMap::new());
+        }
         let Value::Object(object) = self else {
             panic!("Not an object.");
         };
