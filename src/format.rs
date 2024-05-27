@@ -136,6 +136,7 @@ pub fn measure_escaped_string<S: AsRef<str>>(s: S) -> usize {
 /// Escapes a string.
 pub fn escape_string<S: AsRef<str>>(s: S) -> String {
     let mut buffer = String::with_capacity(measure_escaped_string(s.as_ref()));
+    // Writing to a String is infallible (I think), so this should never fail.
     write_escaped_string(&mut buffer, s).unwrap();
     // s.as_ref().chars().for_each(|c| {
     //     match c {
