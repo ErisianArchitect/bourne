@@ -142,6 +142,7 @@ impl IndexOrKey for String {
     }
 }
 
+// By implementing InsertKey for String and &str, I can make Value::insert(k, v) generic for the key type.
 pub trait InsertKey {
     fn insert_into(self, map: &mut ValueMap, value: Value) -> Option<Value>;
 }
