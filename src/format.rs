@@ -119,7 +119,6 @@ fn hex_char(value: u16, slot: usize) -> char {
 pub fn measure_escaped_string<S: AsRef<str>>(s: S) -> usize {
     s.as_ref().chars().map(|c| {
         match c {
-            // '/' => 2,
             '\\' => 2,
             '"' => 2,
             '\u{c}' => 2,
