@@ -142,6 +142,22 @@ impl IndexOrKey for String {
     }
 }
 
+pub trait InsertKey {
+    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value>;
+}
+
+impl InsertKey for String {
+    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value> {
+        map.insert(self, value)
+    }
+}
+
+impl InsertKey for &str {
+    fn insert(self, map: &mut ValueMap, value: Value) -> Option<Value> {
+        map.insert(self.to_owned(), value)
+    }
+}
+
 impl Value {
     pub fn push<T: Into<Value>>(&mut self, value: T) {
         if let Value::Null = self {
@@ -153,14 +169,14 @@ impl Value {
         array.push(value.into());
     }
 
-    pub fn insert<T: Into<Value>>(&mut self, k: String, v: T) -> Option<Value> {
+    pub fn insert<T: Into<Value>, K: InsertKey>(&mut self, k: K, v: T) -> Option<Value> {
         if let Value::Null = self {
             *self = Value::Object(ValueMap::new());
         }
         let Value::Object(object) = self else {
             panic!("Not an object.");
         };
-        object.insert(k, v.into())
+        k.insert(object, v.into())
     }
 
     pub fn get<I: IndexOrKey>(&self, i_k: I) -> Option<&Value> {
