@@ -33,9 +33,9 @@ fn main() -> Result<(), bourne::error::ParseError> {
             }
         }
     "#)?;
-    println!("{value}");
+    println!("{}", value.pretty_print());
     println!("################################");
-    println!("{}", value.to_string_compressed());
+    println!("{}", value.pretty_print_format(Indent::Tabs(1), true));
     Ok(())
 }
 ```
