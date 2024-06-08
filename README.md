@@ -9,8 +9,10 @@ use bourne::{
     Value,
     json
 };
+use bourne::format::Indent;
+use bourne::error::ParseError;
 
-fn main() -> Result<(), bourne::error::ParseError> {
+fn main() -> Result<(), ParseError> {
     let number = 3.14;
     let value = json!(
         {
