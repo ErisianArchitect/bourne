@@ -198,7 +198,9 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
     }
     let indent = formatter.indent();
     array.iter().enumerate().try_for_each(|(index, value)| {
-        write!(writer, "{}", indent.indentation())?;
+        if !indent.sameline {
+            write!(writer, "{}", indent.indentation())?;
+        }
         write_value(writer, value, indent)?;
         // Make sure it's not the final item.
         if index + 1 != array.len() {
@@ -208,8 +210,10 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
     })?;
     if !formatter.sameline {
         write!(writer, "\n")?;
+        write!(writer, "{}", formatter.indentation())?;
     }
-    write!(writer, "{}]", formatter.indentation())
+    
+    write!(writer, "]")
 }
 
 fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonFormatter) -> std::fmt::Result {
@@ -219,7 +223,9 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
     }
     let indent = formatter.indent();
     object.iter().enumerate().try_for_each(|(index, (key, value))| {
-        write!(writer, "{}", indent.indentation())?;
+        if !indent.sameline {
+            write!(writer, "{}", indent.indentation())?;
+        }
         write_string(writer, key)?;
         if indent.no_spacing {
             write!(writer, ":")?;
@@ -235,8 +241,9 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
     })?;
     if !formatter.sameline {
         write!(writer, "\n")?;
+        write!(writer, "{}", formatter.indentation())?;
     }
-    write!(writer, "{}}}", formatter.indentation())
+    write!(writer, "}}")
 }
 
 fn write_value<W: Write>(writer: &mut W, value: &Value, formatter: JsonFormatter) -> std::fmt::Result {
