@@ -17,20 +17,11 @@ pub enum Indent {
 
 impl std::fmt::Display for Indent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        const SPACES: &'static str = "                ";
-        const TABS: &'static str = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-        fn write_all(f: &mut std::fmt::Formatter<'_>, text: &'static str, count: u8) -> std::fmt::Result {
-            let mut count = count as usize;
-            while count > 0 {
-                let len = count.min(text.len());
-                write!(f, "{}", &text[..len])?;
-                count -= len;
-            }
-            Ok(())
-        }
+        const SPACES: &'static str = "                                                                                                                                                                                                                                                                ";
+        const TABS: &'static str = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
         match self {
-            &Self::Spaces(count) => write_all(f, SPACES, count)?,
-            &Self::Tabs(count) => write_all(f, TABS, count)?,
+            &Self::Spaces(count) => write!(f, "{}", &SPACES[..count as usize])?,
+            &Self::Tabs(count) => write!(f, "{}", &TABS[..count as usize])?,
         }
         Ok(())
     }
