@@ -114,11 +114,16 @@ impl Default for Indent {
     }
 }
 
-fn hex_char(value: u16, slot: usize) -> char {
-    const HEX_CHARS: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+fn hex_char(value: u16, slot: usize, lower_case: bool) -> char {
+    const HEX_CHARS_UPPER: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+    const HEX_CHARS_LOWER: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
     let shift = slot * 4;
     let index = ((value & (0xf << shift)) >> shift) as usize;
-    HEX_CHARS[index]
+    if lower_case {
+        HEX_CHARS_LOWER[index]
+    } else {
+        HEX_CHARS_UPPER[index]
+    }
 }
 
 /// Measures the length of a string after being escaped.
@@ -127,12 +132,12 @@ pub fn measure_escaped_string<S: AsRef<str>>(s: S) -> usize {
         match c {
             '\\' => 2,
             '"' => 2,
-            '\u{c}' => 2,
-            '\u{8}' => 2,
+            '\u{000c}' => 2,
+            '\u{0008}' => 2,
             '\n' => 2,
             '\r' => 2,
             '\t' => 2,
-            '\u{0}'..='\u{1f}' => 6,
+            '\u{0000}'..='\u{001f}' => 6,
             _ => c.len_utf8(),
         }
     }).sum()
@@ -151,16 +156,16 @@ fn write_escaped_string<W: Write, S: AsRef<str>>(writer: &mut W, s: S) -> std::f
         match c {
             '\\' => write!(writer, "\\\\")?,
             '"' => write!(writer, "\\\"")?,
-            '\u{c}' => write!(writer, "\\f")?,
-            '\u{8}' => write!(writer, "\\b")?,
+            '\u{000c}' => write!(writer, "\\f")?,
+            '\u{0008}' => write!(writer, "\\b")?,
             '\n' => write!(writer, "\\n")?,
             '\r' => write!(writer, "\\r")?,
             '\t' => write!(writer, "\\t")?,
-            '\u{0}'..='\u{1f}' => {
+            '\u{0000}'..='\u{001f}' => {
                 let hex = c as u16;
-                write!(writer, "\\u00")?;
-                for i in (0..2).rev() {
-                    write!(writer, "{}", hex_char(hex, i))?;
+                write!(writer, "\\u")?;
+                for i in (0..4).rev() {
+                    write!(writer, "{}", hex_char(hex, i, true))?;
                 }
             }
             _ => write!(writer, "{c}")?,
@@ -279,5 +284,17 @@ impl Value {
 
     pub fn pretty_print(&self) -> PrettyPrint<'_> {
         PrettyPrint(self, Indent::Spaces(2), false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn escaping_test() {
+        let unescaped: &'static str = "Hello\nWorld\u{001f}";
+        let escaped = escape_string(unescaped);
+        assert_eq!(escaped, "Hello\\nWorld\\u001F");
     }
 }

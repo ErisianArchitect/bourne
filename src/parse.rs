@@ -30,8 +30,8 @@ pub fn unescape_string<S: AsRef<str>>(string: S) -> ParseResult<String> {
             continue;
         }
         buffer.push(match chars.next() {
-            Some('f') => '\u{c}',
-            Some('b') => '\u{8}',
+            Some('f') => '\u{000c}',
+            Some('b') => '\u{0008}',
             Some('n') => '\n',
             Some('r') => '\r',
             Some('t') => '\t',
