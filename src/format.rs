@@ -293,8 +293,8 @@ mod tests {
     
     #[test]
     fn escaping_test() {
-        let unescaped: &'static str = "Hello\nWorld\u{001f}";
+        let unescaped: &'static str = "Hello\nWorld\u{10}";
         let escaped = escape_string(unescaped);
-        assert_eq!(escaped, "Hello\\nWorld\\u001F");
+        assert_eq!(escaped, "Hello\\nWorld\\u0010");
     }
 }
