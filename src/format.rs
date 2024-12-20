@@ -20,10 +20,9 @@ impl std::fmt::Display for Indent {
         const SPACES: &'static str = "                                                                                                                                                                                                                                                                ";
         const TABS: &'static str = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
         match self {
-            &Self::Spaces(count) => write!(f, "{}", &SPACES[..count as usize])?,
-            &Self::Tabs(count) => write!(f, "{}", &TABS[..count as usize])?,
+            &Self::Spaces(count) => write!(f, "{}", &SPACES[..count as usize]),
+            &Self::Tabs(count) => write!(f, "{}", &TABS[..count as usize]),
         }
-        Ok(())
     }
 }
 
