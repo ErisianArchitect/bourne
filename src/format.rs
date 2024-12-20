@@ -22,7 +22,7 @@ impl std::fmt::Display for Indent {
         fn write_all(f: &mut std::fmt::Formatter<'_>, text: &'static str, count: u8) -> std::fmt::Result {
             let mut count = count as usize;
             while count > 0 {
-                let len = count.min(SPACES.len());
+                let len = count.min(text.len());
                 write!(f, "{}", &text[..len])?;
                 count -= len;
             }
