@@ -136,7 +136,7 @@ impl From<ValueMap> for Value {
 impl From<i64> for Value {
     /// Create a [Value] from an [i64]. Note that there is loss in precision because this value will be converted to [f64].
     fn from(value: i64) -> Self {
-        Value::Number(Number::Float(value as f64))
+        Value::Number(Number::Int(value))
     }
 }
 
