@@ -24,7 +24,7 @@ checksum = "5c6cb57a04249c6480766f7f7cef5467412af1490f8d1e243141daddada3264f"
 name = "bourne"
 version = "0.2.0"
 dependencies = [
- "bournemacro",
+ "bournemacro 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashbrown",
  "indexmap",
  "thiserror",
@@ -33,6 +33,17 @@ dependencies = [
 [[package]]
 name = "bournemacro"
 version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "bournemacro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cc529acf13a77c010949b595bc63a665997b2cd60a89c4bc33791e8365f0c8f"
 dependencies = [
  "proc-macro2",
  "quote",
