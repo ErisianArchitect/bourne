@@ -4,7 +4,7 @@ pub mod format;
 pub use bournemacro::json;
 
 #[cfg(not(feature = "preserve_order"))]
-pub type ValueMap = std::collections::HashMap<String, Value>;
+pub type ValueMap = hashbrown::HashMap<String, Value>;
 #[cfg(feature = "preserve_order")]
 pub type ValueMap = indexmap::IndexMap<String, Value>;
 
