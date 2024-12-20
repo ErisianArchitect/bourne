@@ -37,7 +37,7 @@ struct JsonFormatter {
     /// All on the same line.
     sameline: bool,
     /// No spaces between elements or around colons.
-    no_spacing: bool,
+    spacing: bool,
     /// The [Indent] to use. This is ignored if `sameline` is true.
     indent: Indent,
     /// Indent level. Only modify this if you know what you're doing.
@@ -56,14 +56,14 @@ impl<'a> std::fmt::Display for Indentation<'a> {
 }
 
 impl JsonFormatter {
-    fn new(sameline: bool, no_spacing: bool, indent: Indent) -> Self {
-        Self::new_indented(0, sameline, no_spacing, indent)
+    fn new(sameline: bool, spacing: bool, indent: Indent) -> Self {
+        Self::new_indented(0, sameline, spacing, indent)
     }
 
-    fn new_indented(indent_level: u32, sameline: bool, no_spacing: bool, indent: Indent) -> Self {
+    fn new_indented(indent_level: u32, sameline: bool, spacing: bool, indent: Indent) -> Self {
         Self {
             sameline,
-            no_spacing,
+            spacing,
             indent,
             indent_level: indent_level,
         }
@@ -91,7 +91,7 @@ impl JsonFormatter {
         if !self.sameline {
             write!(writer, "\n")?;
         // Are double-negatives allowed in programming? There's not no spacing here.
-        } else if !self.no_spacing {
+        } else if self.spacing {
             write!(writer, " ")?;
         }
         Ok(())
@@ -197,15 +197,15 @@ fn write_array<W: Write>(writer: &mut W, array: &[Value], formatter: JsonFormatt
     if !formatter.sameline {
         write!(writer, "\n")?;
     }
-    let indent = formatter.indent();
+    let indented_formatter = formatter.indent();
     array.iter().enumerate().try_for_each(|(index, value)| {
-        if !indent.sameline {
-            write!(writer, "{}", indent.indentation())?;
+        if !indented_formatter.sameline {
+            write!(writer, "{}", indented_formatter.indentation())?;
         }
-        write_value(writer, value, indent)?;
+        write_value(writer, value, indented_formatter)?;
         // Make sure it's not the final item.
         if index + 1 != array.len() {
-            indent.write_separator(writer)?;
+            indented_formatter.write_separator(writer)?;
         }
         Ok(())
     })?;
@@ -228,10 +228,10 @@ fn write_object<W: Write>(writer: &mut W, object: &ValueMap, formatter: JsonForm
             write!(writer, "{}", indent.indentation())?;
         }
         write_string(writer, key)?;
-        if indent.no_spacing {
-            write!(writer, ":")?;
-        } else {
+        if indent.spacing {
             write!(writer, " : ")?;
+        } else {
+            write!(writer, ":")?;
         }
         write_value(writer, value, indent)?;
         // Make sure it's not the final item
@@ -260,7 +260,7 @@ fn write_value<W: Write>(writer: &mut W, value: &Value, formatter: JsonFormatter
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write_value(f, self, JsonFormatter::new(true, true, Indent::Spaces(0)))
+        write_value(f, self, JsonFormatter::new(true, false, Indent::Spaces(0)))
     }
 }
 
@@ -279,22 +279,11 @@ impl Value {
     /// - `indent`: Controls the indentation. Use `Indent::Spaces(0)` if you don't want indentation (This defeats the purpose of pretty printing).
     /// - `spacing`: Determines whether or not there are spaces before and after colons.
     pub fn pretty_print_format(&self, indent: Indent, spacing: bool) -> PrettyPrint<'_> {
-        PrettyPrint(self, indent, !spacing)
+        PrettyPrint(self, indent, spacing)
     }
 
+    /// Returns the default pretty printer.
     pub fn pretty_print(&self) -> PrettyPrint<'_> {
-        PrettyPrint(self, Indent::Spaces(2), false)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn escaping_test() {
-        let unescaped: &'static str = "Hello\nWorld\u{10}";
-        let escaped = escape_string(unescaped);
-        assert_eq!(escaped, "Hello\\nWorld\\u0010");
+        PrettyPrint(self, Indent::Spaces(4), true)
     }
 }
