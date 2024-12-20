@@ -1,7 +1,13 @@
 [package]
 name = "bournemacro"
+description = "A json proc-macro for use with the bourne cratecd."
+repository = "https://github.com/ErisianArchitect/bourne"
+readme = "README.md"
+categories = ["parsing", "encoding"]
+keywords = ["json", "macro"]
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 
 [lib]
 proc-macro = true
