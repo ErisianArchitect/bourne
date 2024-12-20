@@ -2,7 +2,7 @@
 // Because they loved discovering ancient "bits" of history!
 use std::str::FromStr;
 
-use crate::{error::ParseError, Value, ValueMap};
+use crate::{error::ParseError, Value, ValueMap, Number};
 
 /// Result returned from JSON parsing.
 pub type ParseResult<T> = Result<T, ParseError>;
@@ -173,8 +173,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Parse a number into [f64].
-    fn parse_number(&mut self) -> ParseResult<f64> {
+    /// Parse a [Number].
+    fn parse_number(&mut self) -> ParseResult<Number> {
         // Valid characters that can follow a number: '}', ']', ',', and whitespace.
         let mut found_e = false;
         let mut found_dot = false;
@@ -205,7 +205,11 @@ impl<'a> Parser<'a> {
             }
         }
         if self.index - start != 0 {
-            Ok(self.source[start..self.index].parse::<f64>()?)
+            if found_dot | found_e {
+                Ok(Number::Float(self.source[start..self.index].parse::<f64>()?))
+            } else {
+                Ok(Number::Int(self.source[start..self.index].parse::<i64>()?))
+            }
         } else {
             Err(ParseError::InvalidCharacter(self.index))
         }

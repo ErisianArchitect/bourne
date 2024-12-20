@@ -12,6 +12,12 @@ pub type ValueMap = hashbrown::HashMap<String, Value>;
 #[cfg(feature = "preserve_order")]
 pub type ValueMap = indexmap::IndexMap<String, Value>;
 
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum Number {
+    Float(f64),
+    Int(i64),
+}
+
 /// JSON Value.
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -29,11 +35,11 @@ pub enum Value {
     /// false
     /// ```
     Boolean(bool),
-    /// An [f64] number.
+    /// An [f64] or [i64] number.
     /// ```no_run,json
     /// 3.14159265358979
     /// ```
-    Number(f64),
+    Number(Number),
     /// A UTF-8 encoded string.
     /// ```no_run,json
     /// "The quick brown fox jumps over the lazy dog.\nhello, world"
@@ -95,7 +101,7 @@ impl From<bool> for Value {
 impl From<f64> for Value {
     /// Create a [Value] from an [f64].
     fn from(value: f64) -> Self {
-        Value::Number(value)
+        Value::Number(Number::Float(value))
     }
 }
 
@@ -130,7 +136,7 @@ impl From<ValueMap> for Value {
 impl From<i64> for Value {
     /// Create a [Value] from an [i64]. Note that there is loss in precision because this value will be converted to [f64].
     fn from(value: i64) -> Self {
-        Value::Number(value as f64)
+        Value::Number(Number::Float(value as f64))
     }
 }
 
@@ -332,5 +338,26 @@ pub trait ObjectExt {
 impl ObjectExt for ValueMap {
     fn insert_value<T: Into<Value>>(&mut self, k: String, v: T) -> Option<Value> {
         self.insert(k, v.into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+    #[test]
+    fn parse_number_test() -> Result<(), crate::error::ParseError> {
+        let object = Value::from_str(r#"
+            {
+                "int": 9223372036854775807,
+                "float": 3.14159265358979
+            }
+        "#)?;
+        assert!(matches!(object["int"], Value::Number(Number::Int(i64::MAX))));
+        assert!(matches!(object["float"], Value::Number(Number::Float(3.14159265358979))));
+        let json_text = object.to_string();
+        assert_eq!(json_text, r#"{"int":9223372036854775807,"float":3.14159265358979}"#);
+        Ok(())
     }
 }

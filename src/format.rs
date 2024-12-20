@@ -7,11 +7,20 @@ use std::fmt::{
 };
 use std::str::FromStr;
 
-use crate::error::*;
+use crate::{error::*, Number};
 use crate::{
     Value,
     ValueMap,
 };
+
+impl std::fmt::Display for Number {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            &Number::Float(float) => write!(f, "{}", float),
+            &Number::Int(int) => write!(f, "{}", int),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Indent {
@@ -182,7 +191,7 @@ fn write_boolean<W: Write>(writer: &mut W, value: bool) -> std::fmt::Result {
     write!(writer, "{value}")
 }
 
-fn write_number<W: Write>(writer: &mut W, value: f64) -> std::fmt::Result {
+fn write_number<W: Write>(writer: &mut W, value: Number) -> std::fmt::Result {
     write!(writer, "{value}")
 }
 
