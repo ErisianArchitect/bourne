@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use crate::{error::ParseError, Value, ValueMap};
 
+/// Result returned from JSON parsing.
 pub type ParseResult<T> = Result<T, ParseError>;
 
 /// Convert a hexadecimal character into a u16.
@@ -66,6 +67,7 @@ pub fn unescape_string<S: AsRef<str>>(string: S) -> ParseResult<String> {
     Ok(buffer)
 }
 
+/// A JSON parser.
 #[derive(Debug, Clone, Copy)]
 struct Parser<'a> {
     source: &'a str,
@@ -73,6 +75,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// Create a new [Parser] from a `source` string.
     fn new(source: &'a str) -> Self {
         Self {
             source,
@@ -361,6 +364,7 @@ impl<'a> Parser<'a> {
 
 impl FromStr for Value {
     type Err = ParseError;
+    /// Parse a JSON [Value] from a string.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parser = Parser::new(s);
         parser.eat_whitespace();
