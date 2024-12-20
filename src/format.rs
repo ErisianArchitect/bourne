@@ -1,6 +1,9 @@
 #![allow(unused)]
 
-use std::fmt::Write;
+use std::fmt::{
+    Write,
+    Formatter,
+};
 use std::str::FromStr;
 
 use crate::error::*;
@@ -16,7 +19,8 @@ pub enum Indent {
 }
 
 impl std::fmt::Display for Indent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    /// Writes an [Indent] to a [Formatter]
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         const SPACES: &'static str = "                                                                                                                                                                                                                                                                ";
         const TABS: &'static str = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
         match self {
@@ -41,7 +45,7 @@ struct JsonFormatter {
 struct Indentation<'a>(&'a JsonFormatter);
 
 impl<'a> std::fmt::Display for Indentation<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for _ in 0..self.0.indent_level {
             write!(f, "{}", self.0.indent)?;
         }
@@ -93,7 +97,7 @@ impl JsonFormatter {
 }
 
 impl std::fmt::Display for JsonFormatter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if !self.sameline {
             self.write_indent(f)?;
         }
@@ -248,7 +252,7 @@ fn write_value<W: Write>(writer: &mut W, value: &Value, formatter: JsonFormatter
 }
 
 impl std::fmt::Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write_value(f, self, JsonFormatter::new(true, true, Indent::Spaces(0)))
     }
 }
@@ -256,7 +260,7 @@ impl std::fmt::Display for Value {
 pub struct PrettyPrint<'a>(&'a Value, Indent, bool);
 
 impl<'a> std::fmt::Display for PrettyPrint<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write_value(f, self.0, JsonFormatter::new(false, self.2, self.1))
     }
 }
