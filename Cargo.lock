@@ -22,7 +22,7 @@ checksum = "5c6cb57a04249c6480766f7f7cef5467412af1490f8d1e243141daddada3264f"
 
 [[package]]
 name = "bourne"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bournemacro 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashbrown",

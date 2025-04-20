@@ -6,7 +6,7 @@ repository = "https://github.com/ErisianArchitect/bourne"
 readme = "README.md"
 categories = ["encoding", "parsing", "parser-implementations"]
 keywords = ["json"]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 
