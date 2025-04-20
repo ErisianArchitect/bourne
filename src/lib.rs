@@ -343,6 +343,7 @@ impl ObjectExt for ValueMap {
 
 #[cfg(test)]
 mod tests {
+    use core::f64;
     use std::str::FromStr;
 
     use super::*;
@@ -359,5 +360,18 @@ mod tests {
         let json_text = object.to_string();
         assert_eq!(json_text, r#"{"int":9223372036854775807,"float":3.14159265358979}"#);
         Ok(())
+    }
+
+    #[test]
+    fn float_nan_infinity_test() {
+        use crate as bourne;
+        let value = json!({
+            "nan": f64::NAN,
+            "infinity": f64::INFINITY,
+            "min_positive": f64::MIN_POSITIVE,
+            "min": f64::MIN,
+            "max": f64::MAX,
+        });
+        println!("{value}");
     }
 }
