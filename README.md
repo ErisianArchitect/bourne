@@ -1,3 +1,5 @@
+![giphy](https://github.com/user-attachments/assets/de31c945-708b-43b3-908e-2d32c6f98d5d)
+
 A simple JSON library written entirely in Rust.
 
 Use `preserve_order` feature to preserve element order in `Value::Object(_)`. This will use `indexmap`, which will incur a significant memory overhead.
