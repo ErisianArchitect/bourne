@@ -2,7 +2,7 @@
 // Because they loved discovering ancient "bits" of history!
 use std::str::FromStr;
 
-use crate::{error::ParseError, Value, ValueMap, Number};
+use crate::{error::ParseError, Number, Value, ValueMap};
 
 /// Result returned from JSON parsing.
 pub type ParseResult<T> = Result<T, ParseError>;
